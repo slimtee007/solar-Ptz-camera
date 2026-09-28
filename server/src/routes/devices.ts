@@ -85,6 +85,24 @@ router.get('/:id/stream', async (req, res) => {
     const adapter = getAdapterForDevice(dev);
     const rtspUrl = await (adapter as any).getStreamUrl();
     
+    // P2P mode - no local RTSP, needs gateway
+    if (rtspUrl.startsWith('p2p://')) {
+      return res.json({
+        type: 'p2p',
+        hlsUrl: `/hls/${dev.id}/index.m3u8`,
+        rtspUrl,
+        webrtc: null,
+        thumbnail: `https://picsum.photos/seed/${dev.id}/640/360`,
+        message: 'P2P mode - camera is 4G remote, no local RTSP. Enable RTSP in app or deploy P2P gateway.',
+        help: {
+          option1: 'Ubox App -> Settings -> Local -> Enable RTSP, then add rtsp://admin:pass@IP:554/live/ch0',
+          option2: 'Same WiFi: find camera IP, use admin/888888',
+          option3: 'Remote 4G: need P2P gateway SDK from supplier, see /api/cloud/gateway/instructions',
+          currentUid: dev.uid
+        }
+      });
+    }
+    
     if (process.env.MOCK_MODE === 'true') {
       // Return mock stream info - frontend will show placeholder
       return res.json({
