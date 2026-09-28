@@ -324,8 +324,7 @@ if (MOCK_MODE) {
   console.log('[Server] MOCK_MODE enabled - using simulated cameras');
 } else {
   // In production, still seed if empty but log warning
-  const { getAllDevices: getDevs } = require('./services/deviceManager.js');
-  if (getDevs().length === 0) {
+  if (getAllDevices().length === 0) {
     console.log('[Server] No devices found, seeding demo devices. Set MOCK_MODE=false and add real cameras via API.');
     seedMockDevices();
   }
