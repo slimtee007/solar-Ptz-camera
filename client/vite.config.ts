@@ -16,11 +16,25 @@ export default defineConfig({
       'X-Frame-Options': 'ALLOWALL'
     },
     proxy: {
-      '/api': 'http://localhost:3001',
-      '/hls': 'http://localhost:3001',
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log(`\n🔴 [VITE PROXY ERROR] ${req.method} ${req.url} -> ${options.target}${req.url}`);
+            console.log(`   Error: ${err.message}`);
+            console.log(`   FIX: Make sure API server is running: npm run dev --workspace=server (port 3001)\n`);
+          });
+        }
+      },
+      '/hls': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      },
       '/ws': {
         target: 'ws://localhost:3001',
-        ws: true
+        ws: true,
+        changeOrigin: true
       }
     }
   },

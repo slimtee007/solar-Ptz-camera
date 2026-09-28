@@ -8,8 +8,10 @@
     "dev": "concurrently \"npm run dev --workspace=server\" \"npm run dev --workspace=client\"",
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
+    "dev:win": "npm run dev:server & npm run dev:client",
     "build": "npm run build --workspace=client && npm run build --workspace=server",
-    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server"
+    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server",
+    "check:server": "curl http://localhost:3001/api/health || echo Server offline - run npm run dev:server"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
