@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  server:
+    build: ./server
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/data:/app/data
+    environment:
+      - PORT=3001
+      - MOCK_MODE=true
+      - DB_PATH=/app/data/db.sqlite
+      - HLS_OUTPUT_DIR=/app/data/hls
+    restart: unless-stopped
+
+  client:
+    build: ./client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    environment:
+      - VITE_API_URL=http://localhost:3001
