@@ -12,10 +12,39 @@ import { Login } from './pages/Login'
 import './index.css'
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('solar_ptz_token')
-  const mockMode = true // In dev, allow bypass. In prod, check token
-  // If you want to enforce auth even in mock mode, uncomment:
-  // if (!token && !mockMode) { window.location.href = '/login'; return null }
+  const [ready, setReady] = React.useState(false)
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('solar_ptz_token')
+    if (token) {
+      setReady(true)
+      return
+    }
+    // Auto-login with default admin/admin123 for mock mode / first run
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password: 'admin123' })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.token) {
+          localStorage.setItem('solar_ptz_token', data.token)
+          localStorage.setItem('solar_ptz_user', JSON.stringify(data.user))
+        }
+      })
+      .catch(() => {})
+      .finally(() => setReady(true))
+  }, [])
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center text-zinc-500 text-sm">
+        Connecting to API server...
+      </div>
+    )
+  }
+
   return <Layout>{children}</Layout>
 }
 

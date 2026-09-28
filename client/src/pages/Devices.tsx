@@ -23,9 +23,18 @@ export function Devices() {
   const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => { 
-    fetchDevices().catch(() => setServerOnline(false))
-    // Check server health
-    api.getHealth().then(() => setServerOnline(true)).catch(() => setServerOnline(false))
+    // Try auto-login first if no token
+    const ensureAuth = async () => {
+      if (!localStorage.getItem('solar_ptz_token')) {
+        try {
+          const res = await api.login('admin', 'admin123')
+          localStorage.setItem('solar_ptz_token', res.token)
+        } catch {}
+      }
+      fetchDevices().catch(() => setServerOnline(false))
+      api.getHealth().then(() => setServerOnline(true)).catch(() => setServerOnline(false))
+    }
+    ensureAuth()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

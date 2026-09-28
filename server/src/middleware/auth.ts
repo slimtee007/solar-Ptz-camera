@@ -17,8 +17,12 @@ export function verifyToken(token: string) {
 }
 
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-  // Allow bypass if AUTH_DISABLED=true (for dev / mock)
-  if (process.env.AUTH_DISABLED === 'true' || process.env.MOCK_MODE === 'true') {
+  // Allow bypass if AUTH_DISABLED=true or MOCK_MODE != false (default true for dev)
+  // Fix: previously checked === 'true' but env may be undefined -> default should be mock
+  const isMock = process.env.MOCK_MODE !== 'false'; // default true, same as index.ts
+  const isAuthDisabled = process.env.AUTH_DISABLED === 'true' || isMock;
+
+  if (isAuthDisabled) {
     req.user = { id: 'dev_user', role: 'admin', username: 'admin' };
     return next();
   }
