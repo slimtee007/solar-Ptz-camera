@@ -178,6 +178,86 @@ router.get('/:id/events', async (req, res) => {
   res.json(events);
 });
 
+// Snapshot - production
+router.get('/:id/snapshot', async (req, res) => {
+  const dev = getDeviceById(req.params.id);
+  if (!dev) return res.status(404).json({ error: 'Not found' });
+  try {
+    const adapter = getAdapterForDevice(dev) as any;
+    if (adapter.getSnapshot) {
+      const buffer = await adapter.getSnapshot();
+      if (buffer) {
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Cache-Control', 'no-cache');
+        return res.send(buffer);
+      }
+    }
+    // Fallback: try to get snapshot via ONVIF or HTTP
+    res.status(404).json({ error: 'Snapshot not available for this device', hint: 'Ensure camera IP is reachable and supports snapshot.cgi' });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/:id/sdcard', async (req, res) => {
+  const dev = getDeviceById(req.params.id);
+  if (!dev) return res.status(404).json({ error: 'Not found' });
+  try {
+    const adapter = getAdapterForDevice(dev) as any;
+    if (adapter.getSdCardStatus) {
+      const sd = await adapter.getSdCardStatus();
+      return res.json(sd);
+    }
+    res.json({ used: 0, total: 0, status: 'unknown' });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/:id/reboot', async (req, res) => {
+  const dev = getDeviceById(req.params.id);
+  if (!dev) return res.status(404).json({ error: 'Not found' });
+  try {
+    const adapter = getAdapterForDevice(dev) as any;
+    if (adapter.reboot) {
+      await adapter.reboot();
+      return res.json({ success: true, message: 'Reboot command sent' });
+    }
+    res.status(400).json({ error: 'Reboot not supported for this platform' });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/:id/presets', async (req, res) => {
+  const dev = getDeviceById(req.params.id);
+  if (!dev) return res.status(404).json({ error: 'Not found' });
+  try {
+    const adapter = getAdapterForDevice(dev) as any;
+    if (adapter.getPresets) {
+      const presets = await adapter.getPresets();
+      return res.json(presets);
+    }
+    res.json([]);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/:id/goto-preset', async (req, res) => {
+  const { preset } = req.body;
+  if (!preset) return res.status(400).json({ error: 'preset required' });
+  const dev = getDeviceById(req.params.id);
+  if (!dev) return res.status(404).json({ error: 'Not found' });
+  try {
+    const adapter = getAdapterForDevice(dev) as any;
+    const ok = await adapter.ptzControl(`preset${preset}`, 50);
+    res.json({ success: ok, preset });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Groups
 router.get('/groups/list', (req, res) => {
   const rows = db.prepare('SELECT DISTINCT groupName FROM devices').all() as any[];

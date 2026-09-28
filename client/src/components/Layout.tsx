@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Video, History, Settings, Cpu, Sun, Battery, Wifi } from 'lucide-react'
+import { LayoutDashboard, Video, History, Settings, Cpu, Sun, Battery, Wifi, Cloud, LogOut } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const nav = [
@@ -7,6 +7,7 @@ const nav = [
   { path: '/live', label: 'Live View', icon: Video },
   { path: '/playback', label: 'Playback', icon: History },
   { path: '/devices', label: 'Devices', icon: Cpu },
+  { path: '/production', label: 'Production APIs', icon: Cloud },
   { path: '/settings', label: 'Settings', icon: Settings },
 ]
 
